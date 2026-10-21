@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LiveAct — Towards Real-Time Multi-Agent World Models with Heterogeneous Action Interfaces</title>
+  <meta name="description" content="LiveAct generates a shared video future for several agents at once, each driven by its own action stream, from game buttons to robot joint commands, and streams at 17.70 FPS.">
+  <meta property="og:title" content="LiveAct: Towards Real-Time Multi-Agent World Models with Heterogeneous Action Interfaces">
+  <meta property="og:description" content="One video world model, many agents, heterogeneous controls, real-time streaming.">
+  <meta property="og:image" content="static/img/teaser.webp">
+  <meta name="theme-color" content="#09090e">
+  <link rel="icon" type="image/png" href="static/img/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;550;600;650;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="container">
+    <a class="brand" href="#top" aria-label="LiveAct home"><img src="static/img/logo.png" alt="" width="30" height="30">LiveAct</a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#rollouts">Rollouts</a>
+      <a href="#problem">Problem</a>
+      <a href="#method">Method</a>
+      <a href="#results">Results</a>
+      <a href="#dataset">Dataset</a>
+      <a href="#citation">Citation</a>
+    </nav>
+    <div class="nav-actions">
+      <a class="btn" href="#" data-link="code">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        Code
+      </a>
+      <a class="btn" href="#" data-link="paper">Paper</a>
+    </div>
+    <button class="nav-toggle" aria-expanded="false" aria-label="Toggle menu">Menu</button>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ============================================================ HERO -->
+<div class="hero" id="top">
+  <div class="hero-grid-bg"></div>
+  <div class="container">
+    <div class="hero-main">
+      <div>
+        <h1>
+          <span class="wordmark">Live<i class="grad-text">Act</i></span>
+          <span class="subtitle">Towards Real-Time Multi-Agent World Models with Heterogeneous Action Interfaces</span>
+        </h1>
+        <p class="hero-lead">
+          One frame in, one action stream per agent, and LiveAct renders the shared future in which <b>every stream moves its own agent</b>.
+          The streams can be game buttons or robot joint commands. A single model covers four games and two robot sources, and its causal version <b>streams at 17.70&nbsp;FPS</b>.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-lg btn-glow" href="#" data-link="paper">
+            Read the paper
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M5 10h10m0 0l-4-4m4 4l-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="btn btn-lg btn-ghost" href="#" data-link="arxiv">arXiv</a>
+          <a class="btn btn-lg btn-ghost" href="#" data-link="code">Code</a>
+        </div>
+      </div>
+
+      <div class="player" data-sync>
+        <div class="player-head"><span class="dot"></span><span class="title">Street Fighter II</span><span>· 81 frames · 16 fps</span><span class="hint">⇆ Drag to compare</span></div>
+        <div class="compare" style="aspect-ratio: 720 / 472">
+          <video class="cmp-base" src="static/video/sq_gt_0000.mp4" poster="static/video/sq_gt_0000.jpg" muted playsinline preload="auto"></video>
+          <video class="cmp-top" src="static/video/sq_ours_0000.mp4" poster="static/video/sq_ours_0000.jpg" muted playsinline preload="auto"></video>
+          <div class="cmp-handle"></div>
+          <span class="cmp-label left">Ground truth</span><span class="cmp-label right">LiveAct</span>
+          <input class="cmp-range" type="range" min="0" max="100" value="50" aria-label="Move the divider between ground truth and LiveAct">
+        </div>
+        <div class="strip"><video src="static/video/strip_0000.mp4" poster="static/video/strip_0000.jpg" muted playsinline preload="auto"></video></div>
+        <div class="player-foot">
+          <button class="icon-btn" data-action="toggle" aria-label="Pause"><svg viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3.5" height="12" rx="1"/><rect x="9.5" y="2" width="3.5" height="12" rx="1"/></svg></button>
+          <button class="icon-btn" data-action="restart" aria-label="Restart"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 8a5.5 5.5 0 105.5-5.5H5M5 2.5L3 4.5 5 6.5"/></svg></button>
+          <div class="progress"><i></i></div>
+          <span>Per-agent action streams</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="num">17.70<small>FPS</small></div><p>Streaming at 512×448 on one GPU, four denoising steps per chunk.</p></div>
+      <div class="stat"><div class="num">0.898 / 0.942</div><p>Agent-attribution accuracy on games / robots, with no agent locations, masks, or identity crops.</p></div>
+      <div class="stat"><div class="num">338.5<small>FVD</small></div><p>On games, vs. 563.6 for the strongest baseline. On robots: 270.2 vs. 402.9.</p></div>
+      <div class="stat"><div class="num">119.54<small>hours</small></div><p>17,951 multi-agent trajectories from four games and two robot sources.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================== ROLLOUTS -->
+<section id="rollouts">
+  <div class="container">
+    <div class="sec-head reveal">
+      <div class="sec-kicker"><span class="num">01</span>Rollouts</div>
+      <h2 class="display">Every stream moves <i>its own</i> agent</h2>
+      <p class="sec-lead">Each rollout starts from a single held-out frame and receives one action stream per agent. Drag the divider to compare LiveAct with the recorded ground truth; the timeline underneath plays the actions each agent received.</p>
+    </div>
+
+    <div class="chips" role="group" aria-label="Data source">
+      <button class="chip" aria-pressed="false" data-demo="sf" data-clip="0075" data-ratio="900 / 592" data-title="Street Fighter II" data-meta="· binary controls"><span class="sw game"></span>Street Fighter II</button>
+      <button class="chip" aria-pressed="false" data-demo="ff" data-clip="0083" data-ratio="720 / 630" data-title="Fatal Fury 2" data-meta="· binary controls"><span class="sw game"></span>Fatal Fury 2</button>
+      <button class="chip" aria-pressed="true" data-demo="mm" data-clip="0054" data-ratio="900 / 788" data-title="Micro Machines" data-meta="· binary controls"><span class="sw game"></span>Micro Machines</button>
+      <button class="chip" aria-pressed="false" data-demo="bm" data-clip="0097" data-ratio="900 / 788" data-title="Mega Bomberman" data-meta="· binary controls"><span class="sw game"></span>Mega Bomberman</button>
+      <button class="chip" aria-pressed="false" data-demo="rt" data-clip="0041" data-ratio="900 / 720" data-title="RoboTwin" data-meta="· continuous controls"><span class="sw robot"></span>RoboTwin</button>
+      <button class="chip" aria-pressed="false" data-demo="rf" data-clip="0091" data-ratio="900 / 720" data-title="RoboFactory" data-meta="· continuous controls"><span class="sw robot"></span>RoboFactory</button>
+    </div>
+
+    <div class="demo">
+      <div class="player light" id="demo-player" data-sync>
+        <div class="player-head"><span class="dot"></span><span class="title">Micro Machines</span><span class="meta">· binary controls</span><span class="hint">⇆ Drag to compare</span></div>
+        <div class="compare" style="aspect-ratio: 900 / 788">
+          <video class="cmp-base" src="static/video/sq_gt_0054.mp4" poster="static/video/sq_gt_0054.jpg" muted playsinline preload="none"></video>
+          <video class="cmp-top" src="static/video/sq_ours_0054.mp4" poster="static/video/sq_ours_0054.jpg" muted playsinline preload="none"></video>
+          <div class="cmp-handle"></div>
+          <span class="cmp-label left">Ground truth</span><span class="cmp-label right">LiveAct</span>
+          <input class="cmp-range" type="range" min="0" max="100" value="50" aria-label="Move the divider between ground truth and LiveAct">
+        </div>
+        <div class="strip"><video src="static/video/strip_0054.mp4" poster="static/video/strip_0054.jpg" muted playsinline preload="none"></video></div>
+        <div class="player-foot">
+          <button class="icon-btn" data-action="toggle" aria-label="Pause"><svg viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3.5" height="12" rx="1"/><rect x="9.5" y="2" width="3.5" height="12" rx="1"/></svg></button>
+          <button class="icon-btn" data-action="restart" aria-label="Restart"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 8a5.5 5.5 0 105.5-5.5H5M5 2.5L3 4.5 5 6.5"/></svg></button>
+          <div class="progress"><i></i></div>
+        </div>
+      </div>
+
+      <div class="info">
+        <div class="info-panel" id="info-sf" hidden>
+          <h4>Street Fighter II</h4><div class="src-type">Versus fighting · Sega Genesis</div>
+          <dl class="kv"><dt>Streams</dt><dd>one per fighter</dd><dt>Action type</dt><dd>binary, 60 fps recordings</dd><dt>Controls</dt><dd class="ctrls"><span>light punch</span><span>light kick</span><span>up</span><span>down</span><span>left</span><span>right</span></dd><dt>Trajectories</dt><dd>5,460 · 45.50 h</dd></dl>
+          <p class="note">Each fighter has its own stream. A punch on stream 1 must animate fighter 1, even when the fighters overlap.</p>
+        </div>
+        <div class="info-panel" id="info-ff" hidden>
+          <h4>Fatal Fury 2</h4><div class="src-type">Versus fighting · Sega Genesis</div>
+          <dl class="kv"><dt>Streams</dt><dd>one per fighter</dd><dt>Action type</dt><dd>binary, 60 fps recordings</dd><dt>Controls</dt><dd class="ctrls"><span>standing punch</span><span>standing kick</span><span>up</span><span>down</span><span>left</span><span>right</span></dd><dt>Trajectories</dt><dd>3,200 · 26.67 h</dd></dl>
+          <p class="note">Same control layout as Street Fighter II, but different characters, stages, and move animations.</p>
+        </div>
+        <div class="info-panel" id="info-mm">
+          <h4>Micro Machines</h4><div class="src-type">Shared-track racing · Sega Genesis</div>
+          <dl class="kv"><dt>Streams</dt><dd>one per car</dd><dt>Action type</dt><dd>binary, 60 fps recordings</dd><dt>Controls</dt><dd class="ctrls"><span>steer left</span><span>steer right</span><span>accelerate</span><span>brake or reverse</span></dd><dt>Trajectories</dt><dd>2,150 · 17.92 h</dd></dl>
+          <p class="note">Slot 10 means <i>punch</i> in the fighting games but <i>accelerate</i> here. The schema description tells the model which meaning applies.</p>
+        </div>
+        <div class="info-panel" id="info-bm" hidden>
+          <h4>Mega Bomberman</h4><div class="src-type">Shared-map competition · Sega Genesis</div>
+          <dl class="kv"><dt>Streams</dt><dd>one per player</dd><dt>Action type</dt><dd>binary, 60 fps recordings</dd><dt>Controls</dt><dd class="ctrls"><span>up</span><span>down</span><span>left</span><span>right</span><span>place a bomb</span></dd><dt>Trajectories</dt><dd>2,050 · 17.08 h</dd></dl>
+          <p class="note">Players are small sprites on a large grid, so each stream has to find its own agent in a busy scene.</p>
+        </div>
+        <div class="info-panel" id="info-rt" hidden>
+          <h4>RoboTwin</h4><div class="src-type">Tabletop manipulation · 50 simulated tasks</div>
+          <dl class="kv"><dt>Streams</dt><dd>one per arm</dd><dt>Action type</dt><dd>continuous</dd><dt>Controls</dt><dd class="ctrls"><span>joint 0–6 targets</span><span>gripper open/close</span></dd><dt>Trajectories</dt><dd>2,532 · 3.93 h</dd></dl>
+          <p class="note">Robot clips sample 81 frames uniformly over the full episode, so each clip covers the complete manipulation.</p>
+        </div>
+        <div class="info-panel" id="info-rf" hidden>
+          <h4>RoboFactory</h4><div class="src-type">Collaborative cube stacking · simulation</div>
+          <dl class="kv"><dt>Streams</dt><dd>one per arm</dd><dt>Action type</dt><dd>continuous</dd><dt>Controls</dt><dd class="ctrls"><span>joint 0–6 targets</span><span>gripper open/close</span></dd><dt>Trajectories</dt><dd>2,559 · 8.44 h</dd></dl>
+          <p class="note">The arms work on the same objects, so the model must keep each arm's motion separate while they interact.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="sub reveal">More agents, same interface</h3>
+    <p class="sub-lead">Each additional agent adds one agent description and one action stream; the architecture does not change. Top: ground truth; bottom: LiveAct.</p>
+    <div class="three">
+      <div class="tcard" data-sync>
+        <video src="static/video/p3_micromachines_gt.mp4" poster="static/video/p3_micromachines_gt.jpg" muted playsinline preload="none"></video>
+        <video src="static/video/p3_micromachines_gen.mp4" poster="static/video/p3_micromachines_gen.jpg" muted playsinline preload="none"></video>
+        <h4>Micro Machines · boat race</h4><p>one binary stream per boat</p>
+      </div>
+      <div class="tcard" data-sync>
+        <video src="static/video/p3_bomberman_gt.mp4" poster="static/video/p3_bomberman_gt.jpg" muted playsinline preload="none"></video>
+        <video src="static/video/p3_bomberman_gen.mp4" poster="static/video/p3_bomberman_gen.jpg" muted playsinline preload="none"></video>
+        <h4>Mega Bomberman · full arena</h4><p>one binary stream per player</p>
+      </div>
+      <div class="tcard" data-sync>
+        <video src="static/video/p3_three_gt.mp4" poster="static/video/p3_three_gt.jpg" muted playsinline preload="none"></video>
+        <video src="static/video/p3_three_gen.mp4" poster="static/video/p3_three_gen.jpg" muted playsinline preload="none"></video>
+        <h4>RoboFactory · multi-arm stacking</h4><p>one continuous stream per arm</p>
+      </div>
+    </div>
+
+    <h3 class="sub reveal">More generations</h3>
+    <p class="sub-lead">LiveAct rollouts on further held-out clips from all six sources.</p>
+    <div class="gallery">
+      <figure><video src="static/video/sq_ours_0075.mp4" poster="static/video/sq_ours_0075.jpg" muted loop playsinline preload="none"></video><figcaption>Street Fighter II</figcaption></figure>
+      <figure><video src="static/video/sq_ours_0001.mp4" poster="static/video/sq_ours_0001.jpg" muted loop playsinline preload="none"></video><figcaption>Fatal Fury 2</figcaption></figure>
+      <figure><video src="static/video/sq_ours_0002.mp4" poster="static/video/sq_ours_0002.jpg" muted loop playsinline preload="none"></video><figcaption>Micro Machines</figcaption></figure>
+      <figure><video src="static/video/sq_ours_0009.mp4" poster="static/video/sq_ours_0009.jpg" muted loop playsinline preload="none"></video><figcaption>Mega Bomberman</figcaption></figure>
+      <figure><video src="static/video/sq_ours_0008.mp4" poster="static/video/sq_ours_0008.jpg" muted loop playsinline preload="none"></video><figcaption>RoboTwin</figcaption></figure>
+      <figure><video src="static/video/sq_ours_0057.mp4" poster="static/video/sq_ours_0057.jpg" muted loop playsinline preload="none"></video><figcaption>RoboFactory</figcaption></figure>
+      <figure><video src="static/video/sq_ours_0013.mp4" poster="static/video/sq_ours_0013.jpg" muted loop playsinline preload="none"></video><figcaption>Street Fighter II</figcaption></figure>
+      <figure><video src="static/video/sq_ours_0005.mp4" poster="static/video/sq_ours_0005.jpg" muted loop playsinline preload="none"></video><figcaption>Fatal Fury 2</figcaption></figure>
+      <figure><video src="static/video/sq_ours_0004.mp4" poster="static/video/sq_ours_0004.jpg" muted loop playsinline preload="none"></video><figcaption>Micro Machines</figcaption></figure>
+      <figure><video src="static/video/sq_ours_0016.mp4" poster="static/video/sq_ours_0016.jpg" muted loop playsinline preload="none"></video><figcaption>Mega Bomberman</figcaption></figure>
+      <figure><video src="static/video/sq_ours_0010.mp4" poster="static/video/sq_ours_0010.jpg" muted loop playsinline preload="none"></video><figcaption>RoboTwin</figcaption></figure>
+      <figure><video src="static/video/sq_ours_0017.mp4" poster="static/video/sq_ours_0017.jpg" muted loop playsinline preload="none"></video><figcaption>RoboTwin</figcaption></figure>
+      <figure><video src="static/video/sq_ours_0003.mp4" poster="static/video/sq_ours_0003.jpg" muted loop playsinline preload="none"></video><figcaption>Street Fighter II</figcaption></figure>
+      <figure><video src="static/video/sq_ours_0021.mp4" poster="static/video/sq_ours_0021.jpg" muted loop playsinline preload="none"></video><figcaption>Fatal Fury 2</figcaption></figure>
+      <figure><video src="static/video/sq_ours_0012.mp4" poster="static/video/sq_ours_0012.jpg" muted loop playsinline preload="none"></video><figcaption>Micro Machines</figcaption></figure>
+      <figure><video src="static/video/sq_ours_0011.mp4" poster="static/video/sq_ours_0011.jpg" muted loop playsinline preload="none"></video><figcaption>Mega Bomberman</figcaption></figure>
+      <figure><video src="static/video/sq_ours_0023.mp4" poster="static/video/sq_ours_0023.jpg" muted loop playsinline preload="none"></video><figcaption>RoboTwin</figcaption></figure>
+      <figure><video src="static/video/sq_ours_0029.mp4" poster="static/video/sq_ours_0029.jpg" muted loop playsinline preload="none"></video><figcaption>Mega Bomberman</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================= PROBLEM -->
+<div class="night" id="problem">
+  <div class="container">
+    <div class="sec-head reveal">
+      <div class="sec-kicker"><span class="num">02</span>The problem</div>
+      <h2 class="display">Two things an action tensor <i>does not say</i></h2>
+      <p class="sec-lead">Stacking the agents' actions into one tensor keeps every number but loses two correspondences a shared video model needs: which visible agent a stream belongs to, and what each control dimension means in the current task.</p>
+    </div>
+    <div class="duo">
+      <div class="dcard reveal">
+        <div class="tag">challenge 1 · who responds</div>
+        <h4>Cross-agent misattribution</h4>
+        <p>The stream index separates agent 1's actions from agent 2's, but gives <b>no visual evidence</b> of which fighter is agent 1. One stream's punch can land on the wrong fighter or spread over both.</p>
+        <div class="pair" data-sync>
+          <figure><video src="static/video/mot_misattr.mp4" poster="static/video/mot_misattr.jpg" muted playsinline preload="none"></video><figcaption class="bad">Index-only binding</figcaption></figure>
+          <figure><video src="static/video/mot_agent_gate.mp4" poster="static/video/mot_agent_gate.jpg" muted playsinline preload="none"></video><figcaption class="good">LiveAct · agent gate</figcaption></figure>
+        </div>
+      </div>
+      <div class="dcard reveal">
+        <div class="tag">challenge 2 · what is executed</div>
+        <h4>Control-semantics collapse</h4>
+        <p>Slot 7 is <b>move right</b> for a fighter, <b>steer right</b> for a car, and a continuous <b>gripper</b> command for a robot. A raw vector keeps the value but not the meaning; free text keeps the meaning but not the value.</p>
+        <div class="pair" data-sync>
+          <figure><video src="static/video/mot_dim7.mp4" poster="static/video/mot_dim7.jpg" muted playsinline preload="none"></video><figcaption class="bad">One slot, three meanings</figcaption></figure>
+          <figure><video src="static/video/mot_schema_token.mp4" poster="static/video/mot_schema_token.jpg" muted playsinline preload="none"></video><figcaption class="good">LiveAct · schema token</figcaption></figure>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================== METHOD -->
+<section id="method" style="padding-top: 112px">
+  <div class="container">
+    <div class="sec-head reveal">
+      <div class="sec-kicker"><span class="num">03</span>Method</div>
+      <h2 class="display">A <i>Heterogeneous Action Interface</i></h2>
+      <p class="sec-lead">LiveAct builds on Wan2.2-TI2V-5B. The HAI sits in each of the 30 transformer blocks, after text cross-attention and before the feed-forward layer. It splits action conditioning in two: the query side decides <i>who</i> responds, and the key–value side encodes <i>what</i> each control means and <i>how much</i> it is applied.</p>
+    </div>
+
+    <figure class="fig reveal">
+      <div class="fig-card"><img src="static/img/framework.webp" alt="Overview of LiveAct: foundational ability acquisition with the Heterogeneous Action Interface, teacher forcing for AR tuning, and DMD for streaming video." loading="lazy" width="2200" height="1244"></div>
+      <figcaption><b>Overview.</b> (a) Foundational Ability Acquisition trains a bidirectional teacher with the HAI, which integrates Agent-Aware Spatial Modulation and Schema-Guided Action Adaptation. (b) Teacher Forcing for AR Tuning transfers the same HAI to causal attention. (c) DMD for Streaming Video distills few-step streaming rollouts.</figcaption>
+    </figure>
+
+    <div class="modules">
+      <div class="module reveal">
+        <span class="q">① who responds</span>
+        <h4>Agent-Aware Spatial Modulation</h4>
+        <p>Each stream comes with a short agent description, such as “left-side player character Balrog”. The frozen umT5 encoder turns it into an identity vector, and a learned gate computed from every visual token decides where that identity is added.</p>
+        <p>The gate is soft and learned: no masks, boxes, or reference crops, in training or at inference.</p>
+        <div class="eq">λ = σ(AgentGate([x, q<sub>i</sub>, x⊙q<sub>i</sub>]))<br>x<sup>(i)</sup> = x + λ · AgentDelta(q<sub>i</sub>)</div>
+      </div>
+      <div class="module reveal">
+        <span class="q">② what &amp; how much</span>
+        <h4>Schema-Guided Action Adaptation</h4>
+        <p>Every control slot has a language description, such as “move upward on the Bomberman grid”. Its text embedding says what the control means; the value at each frame scales and shifts that embedding.</p>
+        <p>One token per slot per frame, so visual queries can attend to individual controls.</p>
+        <div class="eq">(γ, β) = MLP(a<sub>τ,j</sub>)<br>h<sub>τ,j</sub> = u<sub>j</sub> ⊙ (1 + γ) + β</div>
+      </div>
+      <div class="module reveal">
+        <span class="q">③ bind &amp; merge</span>
+        <h4>Per-agent cross-attention</h4>
+        <p>Agent <i>i</i>'s modulated visual tokens query its own action tokens from the matching time interval. The residuals of all agents are summed into one shared visual state, keeping the agents consistent with each other and the scene.</p>
+        <p>Output projections start at zero, so training begins from the pretrained backbone.</p>
+        <div class="eq">X̂<sub>k</sub> = X<sub>k</sub> + Σ<sub>i</sub> CrossAttn(X<sub>k</sub><sup>(i)</sup>, H<sub>k</sub><sup>(i)</sup>)</div>
+      </div>
+    </div>
+
+    <h3 class="sub reveal">One 12-slot vector, six meanings</h3>
+    <p class="sub-lead">All sources share a 12-slot control vector per agent. The same slot changes meaning across sources, which is why every slot carries its own schema description. Hover a cell for the exact text.</p>
+    <div class="schema-wrap reveal">
+      <div class="schema">
+        <div></div>
+        <div class="hd">0</div><div class="hd">1</div><div class="hd">2</div><div class="hd">3</div><div class="hd">4</div><div class="hd">5</div><div class="hd">6</div><div class="hd hl">7</div><div class="hd">8</div><div class="hd">9</div><div class="hd">10</div><div class="hd">11</div>
+
+        <div class="src-name"><span class="sw game" style="width:8px;height:8px;border-radius:50%;display:inline-block"></span>Street Fighter II</div>
+        <div class="cell atk" title="medium kick attack">m.kick</div><div class="cell atk" title="light kick attack">kick</div><div class="cell pad" title="unused padding channel 2">·</div><div class="cell pad" title="unused padding channel 3">·</div><div class="cell mov" title="move upward or jump direction">up</div><div class="cell mov" title="move downward or crouch direction">down</div><div class="cell mov" title="move left direction">left</div><div class="cell mov hl" title="move right direction">right</div><div class="cell atk" title="heavy kick attack">h.kick</div><div class="cell atk" title="medium punch attack">m.punch</div><div class="cell atk" title="light punch attack">punch</div><div class="cell atk" title="heavy punch attack">h.punch</div>
+
+        <div class="src-name"><span class="sw game" style="width:8px;height:8px;border-radius:50%;display:inline-block"></span>Fatal Fury 2</div>
+        <div class="cell atk" title="strong kick">s.kick</div><div class="cell atk" title="standing kick attack">kick</div><div class="cell pad" title="unused padding channel 2">·</div><div class="cell pad" title="unused padding channel 3">·</div><div class="cell mov" title="move upward or jump">up</div><div class="cell mov" title="move downward or crouch">down</div><div class="cell mov" title="move left">left</div><div class="cell mov hl" title="move right">right</div><div class="cell atk" title="switch fighting plane">plane</div><div class="cell atk" title="strong punch">s.punch</div><div class="cell atk" title="standing punch attack">punch</div><div class="cell atk" title="line attack">line</div>
+
+        <div class="src-name"><span class="sw game" style="width:8px;height:8px;border-radius:50%;display:inline-block"></span>Micro Machines</div>
+        <div class="cell pad" title="unused padding channel 0">·</div><div class="cell pad" title="unused padding channel 1">·</div><div class="cell pad" title="unused padding channel 2">·</div><div class="cell pad" title="unused padding channel 3">·</div><div class="cell pad" title="unused padding channel 4">·</div><div class="cell pad" title="unused padding channel 5">·</div><div class="cell drv" title="steer left">steer L</div><div class="cell drv hl" title="steer right">steer R</div><div class="cell pad" title="unused padding channel 8">·</div><div class="cell pad" title="unused padding channel 9">·</div><div class="cell drv" title="accelerate">accel</div><div class="cell drv" title="brake or reverse">brake</div>
+
+        <div class="src-name"><span class="sw game" style="width:8px;height:8px;border-radius:50%;display:inline-block"></span>Mega Bomberman</div>
+        <div class="cell bmb" title="kangaroo power">roo</div><div class="cell pad" title="unused padding channel 1">·</div><div class="cell pad" title="unused padding channel 2">·</div><div class="cell pad" title="unused padding channel 3">·</div><div class="cell mov" title="move upward on the Bomberman grid">up</div><div class="cell mov" title="move downward on the Bomberman grid">down</div><div class="cell mov" title="move left on the Bomberman grid">left</div><div class="cell mov hl" title="move right on the Bomberman grid">right</div><div class="cell bmb" title="place a bomb">bomb</div><div class="cell pad" title="unused padding channel 9">·</div><div class="cell pad" title="unused padding channel 10">·</div><div class="cell pad" title="unused padding channel 11">·</div>
+
+        <div class="src-name"><span class="sw robot" style="width:8px;height:8px;border-radius:50%;display:inline-block"></span>RoboTwin</div>
+        <div class="cell jnt" title="robot arm joint 0 target position">j0</div><div class="cell jnt" title="robot arm joint 1 target position">j1</div><div class="cell jnt" title="robot arm joint 2 target position">j2</div><div class="cell jnt" title="robot arm joint 3 target position">j3</div><div class="cell jnt" title="robot arm joint 4 target position">j4</div><div class="cell jnt" title="robot arm joint 5 target position">j5</div><div class="cell jnt" title="robot arm joint 6 target position">j6</div><div class="cell grp hl" title="robot gripper open close command">grip</div><div class="cell pad" title="unused padding channel 8">·</div><div class="cell pad" title="unused padding channel 9">·</div><div class="cell pad" title="unused padding channel 10">·</div><div class="cell pad" title="unused padding channel 11">·</div>
+
+        <div class="src-name"><span class="sw robot" style="width:8px;height:8px;border-radius:50%;display:inline-block"></span>RoboFactory</div>
+        <div class="cell jnt" title="robot arm joint 0 target position">j0</div><div class="cell jnt" title="robot arm joint 1 target position">j1</div><div class="cell jnt" title="robot arm joint 2 target position">j2</div><div class="cell jnt" title="robot arm joint 3 target position">j3</div><div class="cell jnt" title="robot arm joint 4 target position">j4</div><div class="cell jnt" title="robot arm joint 5 target position">j5</div><div class="cell jnt" title="robot arm joint 6 target position">j6</div><div class="cell grp hl" title="robot gripper open close command">grip</div><div class="cell pad" title="unused padding channel 8">·</div><div class="cell pad" title="unused padding channel 9">·</div><div class="cell pad" title="unused padding channel 10">·</div><div class="cell pad" title="unused padding channel 11">·</div>
+      </div>
+      <div class="schema-legend">
+        <span><i class="cell atk"></i>attack</span><span><i class="cell mov"></i>movement</span><span><i class="cell drv"></i>driving</span><span><i class="cell bmb"></i>bomb</span><span><i class="cell jnt"></i>joint target (continuous)</span><span><i class="cell grp"></i>gripper (continuous)</span><span><i class="cell pad"></i>unused padding</span>
+      </div>
+    </div>
+
+    <h3 class="sub reveal">From a bidirectional teacher to real-time streaming</h3>
+    <p class="sub-lead">The full interface stays in place while the generator is converted to blockwise causal attention and then distilled on its own rollouts. Each latent keeps reading the controls of its own time interval as the KV cache advances.</p>
+    <div class="stages">
+      <div class="stage reveal">
+        <div class="st">stage 1</div>
+        <h4>Foundational Ability Acquisition</h4>
+        <ul><li>Bidirectional teacher, full-video context</li><li>10k steps</li><li>50 denoising steps, CFG 5.0</li></ul>
+        <div class="fpsbar"><div class="val">2.77<small>FPS · not streaming</small></div><div class="track"><i style="--v: 0.156"></i></div></div>
+      </div>
+      <div class="stage reveal">
+        <div class="st">stage 2</div>
+        <h4>Teacher Forcing for AR Tuning</h4>
+        <ul><li>Blockwise causal attention over 4-latent chunks</li><li>Each chunk denoised from clean preceding chunks; 6k steps</li><li>50 denoising steps, CFG 5.0</li></ul>
+        <div class="fpsbar"><div class="val">1.66<small>FPS · streaming</small></div><div class="track"><i style="--v: 0.094"></i></div></div>
+      </div>
+      <div class="stage hl reveal">
+        <div class="st">stage 3</div>
+        <h4>DMD for Streaming Video</h4>
+        <ul><li>Distribution matching on the model's own rollouts</li><li>Frozen teacher as the real score; 700 iterations</li><li>4 denoising steps per chunk, no CFG</li></ul>
+        <div class="fpsbar"><div class="val">17.70<small>FPS · streaming</small></div><div class="track"><i style="--v: 1"></i></div></div>
+      </div>
+    </div>
+    <p class="note-sm">Throughput measured at 512×448 on a single GPU.</p>
+  </div>
+</section>
+
+<!-- ========================================================= RESULTS -->
+<section id="results">
+  <div class="container">
+    <div class="sec-head reveal">
+      <div class="sec-kicker"><span class="num">04</span>Results</div>
+      <h2 class="display">Right action, <i>right agent</i></h2>
+      <p class="sec-lead">All methods run on the same 108 held-out clips (78 game, 30 robot). Act-F1 and NRMSE come from frozen inverse-dynamics models trained only on real clips. Attr-Acc is a swap test: a frame counts as correct when the recovered controls match the commands better in the commanded agent order than with the two agents exchanged, so chance is 0.5.</p>
+    </div>
+
+    <div class="charts">
+      <div class="chart grouped">
+        <h4>Agent attribution</h4>
+        <div class="ch-sub">Attr-Acc ↑ · swap test, chance = 0.5</div>
+        <div class="legend"><span><i class="lg1"></i>Games</span><span><i class="lg2"></i>Robots</span></div>
+        <div class="rows">
+        <div class="brow"><div class="name">LingBot-World 2.0</div><div class="bars"><div class="bar" style="--v:.553"><i></i><span>0.553</span></div><div class="bar b2" style="--v:.665"><i></i><span>0.665</span></div></div></div>
+        <div class="brow"><div class="name">MultiWorld (1-view)</div><div class="bars"><div class="bar" style="--v:.548"><i></i><span>0.548</span></div><div class="bar b2" style="--v:.357"><i></i><span>0.357</span></div></div></div>
+        <div class="brow"><div class="name">Incantation</div><div class="bars"><div class="bar" style="--v:.534"><i></i><span>0.534</span></div><div class="bar b2" style="--v:.459"><i></i><span>0.459</span></div></div></div>
+        <div class="brow"><div class="name">ActionParty</div><div class="bars"><div class="bar" style="--v:.547"><i></i><span>0.547</span></div><div class="bar b2" style="--v:.504"><i></i><span>0.504</span></div></div></div>
+        <div class="brow"><div class="name">WanToFight-style</div><div class="bars"><div class="bar" style="--v:.552"><i></i><span>0.552</span></div><div class="bar b2" style="--v:.886"><i></i><span>0.886</span></div></div></div>
+        <div class="brow ours"><div class="name">LiveAct</div><div class="bars"><div class="bar" style="--v:.898"><i></i><span>0.898</span></div><div class="bar b2" style="--v:.942"><i></i><span>0.942</span></div></div></div>
+        </div>
+      </div>
+      <div class="chart-stack">
+        <div class="chart">
+          <h4>Game action following</h4>
+          <div class="ch-sub">Act-F1 ↑ over discrete button events</div>
+          <div class="brow"><div class="name">LingBot-World 2.0</div><div class="bar" style="--v:.2457"><i></i><span>0.146</span></div></div>
+          <div class="brow"><div class="name">MultiWorld (1-view)</div><div class="bar" style="--v:.2744"><i></i><span>0.163</span></div></div>
+          <div class="brow"><div class="name">Incantation</div><div class="bar" style="--v:.2727"><i></i><span>0.162</span></div></div>
+          <div class="brow"><div class="name">ActionParty</div><div class="bar" style="--v:.1448"><i></i><span>0.086</span></div></div>
+          <div class="brow"><div class="name">WanToFight-style</div><div class="bar" style="--v:.4057"><i></i><span>0.241</span></div></div>
+          <div class="brow ours"><div class="name">LiveAct</div><div class="bar" style="--v:1"><i></i><span>0.594</span></div></div>
+        </div>
+        <div class="chart">
+          <h4>Robot command error</h4>
+          <div class="ch-sub">NRMSE ↓ on continuous joint and gripper commands</div>
+          <div class="brow"><div class="name">LingBot-World 2.0</div><div class="bar" style="--v:.8077"><i></i><span>1.106</span></div></div>
+          <div class="brow"><div class="name">MultiWorld (1-view)</div><div class="bar" style="--v:.8026"><i></i><span>1.099</span></div></div>
+          <div class="brow"><div class="name">Incantation</div><div class="bar" style="--v:.8172"><i></i><span>1.119</span></div></div>
+          <div class="brow"><div class="name">ActionParty</div><div class="bar" style="--v:.834"><i></i><span>1.142</span></div></div>
+          <div class="brow"><div class="name">WanToFight-style</div><div class="bar" style="--v:.5536"><i></i><span>0.758</span></div></div>
+          <div class="brow ours"><div class="name">LiveAct</div><div class="bar" style="--v:.4075"><i></i><span>0.558</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <details class="table-details">
+      <summary>Full comparison table · reconstruction, control, and diagnostics</summary>
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr class="grp"><th></th><th colspan="4">Reconstruction</th><th colspan="2">Control</th><th colspan="2">Diagnostics</th></tr>
+            <tr><th>Method</th><th>FVD ↓</th><th>LPIPS ↓</th><th>PSNR ↑</th><th>SSIM ↑</th><th>Act-F1 ↑ / NRMSE ↓</th><th>Attr-Acc ↑</th><th>MME ↓</th><th>Aesthetic ↑</th></tr>
+          </thead>
+          <tbody>
+            <tr class="dom"><td colspan="9">Multi-agent video games</td></tr>
+            <tr><td>LingBot-World 2.0</td><td>1256.6</td><td>0.322</td><td>13.25</td><td>0.490</td><td>0.146</td><td>0.553</td><td>0.57</td><td>5.093</td></tr>
+            <tr><td>MultiWorld (1-view)<sup>a</sup></td><td>2661.4</td><td>0.719</td><td>10.40</td><td>0.125</td><td>0.163</td><td>0.548</td><td>2.67</td><td>4.059</td></tr>
+            <tr><td>Incantation</td><td>1989.5</td><td>0.593</td><td>10.45</td><td>0.226</td><td>0.162</td><td>0.534</td><td>8.77</td><td>4.539</td></tr>
+            <tr><td>ActionParty</td><td>1672.5</td><td>0.272</td><td>14.56</td><td>0.467</td><td>0.086</td><td>0.547</td><td>0.47</td><td>4.974</td></tr>
+            <tr><td>WanToFight-style<sup>b</sup></td><td>563.6</td><td>0.136</td><td>17.67</td><td>0.671</td><td>0.241</td><td>0.552</td><td>0.23</td><td>5.192</td></tr>
+            <tr class="ours"><td>LiveAct (ours)</td><td class="best">338.5</td><td class="best">0.086</td><td class="best">20.17</td><td class="best">0.743</td><td class="best">0.594</td><td class="best">0.898</td><td class="best">0.15</td><td class="best">5.207</td></tr>
+            <tr class="dom"><td colspan="9">Multi-robot manipulation</td></tr>
+            <tr><td>LingBot-World 2.0</td><td>2732.5</td><td>0.603</td><td>7.13</td><td>0.464</td><td>1.106</td><td>0.665</td><td>4.20</td><td>3.570</td></tr>
+            <tr><td>MultiWorld (1-view)<sup>a</sup></td><td>1748.9</td><td>0.276</td><td>15.36</td><td>0.797</td><td>1.099</td><td>0.357</td><td>1.90</td><td>4.054</td></tr>
+            <tr><td>Incantation</td><td>3053.3</td><td>0.820</td><td>3.93</td><td>0.185</td><td>1.119</td><td>0.459</td><td>17.37</td><td>3.710</td></tr>
+            <tr><td>ActionParty</td><td>1661.7</td><td>0.267</td><td>15.42</td><td>0.816</td><td>1.142</td><td>0.504</td><td>1.90</td><td>4.035</td></tr>
+            <tr><td>WanToFight-style<sup>b</sup></td><td>402.9</td><td>0.188</td><td>17.32</td><td>0.831</td><td>0.758</td><td>0.886</td><td class="best">0.42</td><td>4.037</td></tr>
+            <tr class="ours"><td>LiveAct (ours)</td><td class="best">270.2</td><td class="best">0.106</td><td class="best">20.51</td><td class="best">0.871</td><td class="best">0.558</td><td class="best">0.942</td><td class="best">0.42</td><td class="best">4.085</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+    <p class="note-sm"><sup>a</sup> Native MultiWorld uses synchronized multi-view observations; we run it with one fixed view. <sup>b</sup> The code is not released; this is our reproduction, trained on the same mixture as LiveAct.</p>
+
+    <h3 class="sub reveal">Side by side with the baselines</h3>
+    <p class="sub-lead">Same first frame, same action streams. Language-serialized models tend to lose the conditioning scene or the action, per-agent numerical baselines blur the agents, and WanToFight-style keeps the scene but only partly follows the commands.</p>
+    <div class="tabs" role="tablist" aria-label="Comparison case">
+      <button class="tab" role="tab" aria-selected="true" aria-controls="cmp-sf" id="tab-cmp-sf">Street Fighter II</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="cmp-rt" id="tab-cmp-rt">RoboTwin</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="cmp-mm" id="tab-cmp-mm">Micro Machines</button>
+    </div>
+    <div class="tab-panel" id="cmp-sf" role="tabpanel" aria-labelledby="tab-cmp-sf">
+      <div class="vcard" data-sync>
+        <div class="vgrid c3">
+          <figure class="vcell gt"><video src="static/video/sq_gt_0007.mp4" poster="static/video/sq_gt_0007.jpg" muted playsinline preload="none"></video><figcaption>Ground truth</figcaption></figure>
+          <figure class="vcell"><video src="static/video/sq_lingbot_0007.mp4" poster="static/video/sq_lingbot_0007.jpg" muted playsinline preload="none"></video><figcaption>LingBot-World 2.0</figcaption></figure>
+          <figure class="vcell"><video src="static/video/sq_multiworld_0007.mp4" poster="static/video/sq_multiworld_0007.jpg" muted playsinline preload="none"></video><figcaption>MultiWorld</figcaption></figure>
+          <figure class="vcell"><video src="static/video/sq_incantation_0007.mp4" poster="static/video/sq_incantation_0007.jpg" muted playsinline preload="none"></video><figcaption>Incantation</figcaption></figure>
+          <figure class="vcell"><video src="static/video/sq_wantofight_0007.mp4" poster="static/video/sq_wantofight_0007.jpg" muted playsinline preload="none"></video><figcaption>WanToFight-style</figcaption></figure>
+          <figure class="vcell ours"><video src="static/video/sq_ours_0007.mp4" poster="static/video/sq_ours_0007.jpg" muted playsinline preload="none"></video><figcaption>LiveAct (ours)</figcaption></figure>
+        </div>
+        <div class="vfoot"><button data-action="toggle">Pause</button><button data-action="restart">Restart</button><span>All clips play in sync.</span></div>
+      </div>
+    </div>
+    <div class="tab-panel" id="cmp-rt" role="tabpanel" aria-labelledby="tab-cmp-rt" hidden>
+      <div class="vcard" data-sync>
+        <div class="vgrid c3">
+          <figure class="vcell gt"><video src="static/video/sq_gt_0044.mp4" poster="static/video/sq_gt_0044.jpg" muted playsinline preload="none"></video><figcaption>Ground truth</figcaption></figure>
+          <figure class="vcell"><video src="static/video/sq_lingbot_0044.mp4" poster="static/video/sq_lingbot_0044.jpg" muted playsinline preload="none"></video><figcaption>LingBot-World 2.0</figcaption></figure>
+          <figure class="vcell"><video src="static/video/sq_actionparty_0044.mp4" poster="static/video/sq_actionparty_0044.jpg" muted playsinline preload="none"></video><figcaption>ActionParty</figcaption></figure>
+          <figure class="vcell"><video src="static/video/sq_incantation_0044.mp4" poster="static/video/sq_incantation_0044.jpg" muted playsinline preload="none"></video><figcaption>Incantation</figcaption></figure>
+          <figure class="vcell"><video src="static/video/sq_wantofight_0044.mp4" poster="static/video/sq_wantofight_0044.jpg" muted playsinline preload="none"></video><figcaption>WanToFight-style</figcaption></figure>
+          <figure class="vcell ours"><video src="static/video/sq_ours_0044.mp4" poster="static/video/sq_ours_0044.jpg" muted playsinline preload="none"></video><figcaption>LiveAct (ours)</figcaption></figure>
+        </div>
+        <div class="vfoot"><button data-action="toggle">Pause</button><button data-action="restart">Restart</button></div>
+      </div>
+    </div>
+    <div class="tab-panel" id="cmp-mm" role="tabpanel" aria-labelledby="tab-cmp-mm" hidden>
+      <div class="vcard" data-sync>
+        <div class="vgrid c3">
+          <figure class="vcell gt"><video src="static/video/sq_gt_0054.mp4" poster="static/video/sq_gt_0054.jpg" muted playsinline preload="none"></video><figcaption>Ground truth</figcaption></figure>
+          <figure class="vcell"><video src="static/video/sq_lingbot_0054.mp4" poster="static/video/sq_lingbot_0054.jpg" muted playsinline preload="none"></video><figcaption>LingBot-World 2.0</figcaption></figure>
+          <figure class="vcell"><video src="static/video/sq_multiworld_0054.mp4" poster="static/video/sq_multiworld_0054.jpg" muted playsinline preload="none"></video><figcaption>MultiWorld</figcaption></figure>
+          <figure class="vcell"><video src="static/video/sq_incantation_0054.mp4" poster="static/video/sq_incantation_0054.jpg" muted playsinline preload="none"></video><figcaption>Incantation</figcaption></figure>
+          <figure class="vcell"><video src="static/video/sq_wantofight_0054.mp4" poster="static/video/sq_wantofight_0054.jpg" muted playsinline preload="none"></video><figcaption>WanToFight-style</figcaption></figure>
+          <figure class="vcell ours"><video src="static/video/sq_ours_0054.mp4" poster="static/video/sq_ours_0054.jpg" muted playsinline preload="none"></video><figcaption>LiveAct (ours)</figcaption></figure>
+        </div>
+        <div class="vfoot"><button data-action="toggle">Pause</button><button data-action="restart">Restart</button></div>
+      </div>
+    </div>
+
+    <h3 class="sub reveal">Both halves of the interface are needed</h3>
+    <p class="sub-lead">Without Agent-Aware Spatial Modulation (AASM) the queries are identical for all agents, and game Attr-Acc falls to 0.592. Replacing Schema-Guided Action Adaptation (SGAA) with a conventional flat action encoder, an MLP that maps each frame's full action vector to a single token, keeps the agent modulation, yet robot NRMSE rises to 1.120 and robot Attr-Acc falls to 0.484, near chance: queries can only route controls they can interpret.</p>
+    <div class="abl">
+      <div class="chart mini">
+        <div><div class="metric">Game Act-F1 <small>↑</small></div>
+          <div class="brow ours mrow"><div class="name">Full LiveAct</div><div class="bar" style="--v:1"><i></i><span>0.594</span></div></div>
+          <div class="brow mrow"><div class="name">w/o AASM</div><div class="bar" style="--v:.2896"><i></i><span>0.172</span></div></div>
+          <div class="brow mrow"><div class="name">w/o SGAA</div><div class="bar" style="--v:.3788"><i></i><span>0.225</span></div></div></div>
+        <div><div class="metric">Game Attr-Acc <small>↑</small></div>
+          <div class="brow ours mrow"><div class="name">Full LiveAct</div><div class="bar" style="--v:.898"><i></i><span>0.898</span></div></div>
+          <div class="brow mrow"><div class="name">w/o AASM</div><div class="bar" style="--v:.592"><i></i><span>0.592</span></div></div>
+          <div class="brow mrow"><div class="name">w/o SGAA</div><div class="bar" style="--v:.603"><i></i><span>0.603</span></div></div></div>
+        <div><div class="metric">Robot NRMSE <small>↓</small></div>
+          <div class="brow ours mrow"><div class="name">Full LiveAct</div><div class="bar" style="--v:.465"><i></i><span>0.558</span></div></div>
+          <div class="brow mrow"><div class="name">w/o AASM</div><div class="bar" style="--v:.776"><i></i><span>0.931</span></div></div>
+          <div class="brow mrow"><div class="name">w/o SGAA</div><div class="bar" style="--v:.933"><i></i><span>1.120</span></div></div></div>
+        <div><div class="metric">Robot Attr-Acc <small>↑</small></div>
+          <div class="brow ours mrow"><div class="name">Full LiveAct</div><div class="bar" style="--v:.942"><i></i><span>0.942</span></div></div>
+          <div class="brow mrow"><div class="name">w/o AASM</div><div class="bar" style="--v:.810"><i></i><span>0.810</span></div></div>
+          <div class="brow mrow"><div class="name">w/o SGAA</div><div class="bar" style="--v:.484"><i></i><span>0.484</span></div></div></div>
+      </div>
+      <div>
+        <div class="tabs" role="tablist" aria-label="Ablation case">
+          <button class="tab" role="tab" aria-selected="true" aria-controls="abl-a" id="tab-abl-a">Case 1</button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="abl-b" id="tab-abl-b">Case 2</button>
+        </div>
+        <div class="tab-panel" id="abl-a" role="tabpanel" aria-labelledby="tab-abl-a">
+          <div class="vcard" data-sync>
+            <div class="vgrid c2">
+              <figure class="vcell gt"><video src="static/video/sq_gt_0059.mp4" poster="static/video/sq_gt_0059.jpg" muted playsinline preload="none"></video><figcaption>Ground truth</figcaption></figure>
+              <figure class="vcell ours"><video src="static/video/sq_ours_0059.mp4" poster="static/video/sq_ours_0059.jpg" muted playsinline preload="none"></video><figcaption>Full LiveAct</figcaption></figure>
+              <figure class="vcell"><video src="static/video/sq_swapgate_0059.mp4" poster="static/video/sq_swapgate_0059.jpg" muted playsinline preload="none"></video><figcaption>w/o AASM</figcaption></figure>
+              <figure class="vcell"><video src="static/video/sq_woschema_0059.mp4" poster="static/video/sq_woschema_0059.jpg" muted playsinline preload="none"></video><figcaption>w/o SGAA</figcaption></figure>
+            </div>
+            <div class="strip"><video src="static/video/strip_0059.mp4" poster="static/video/strip_0059.jpg" muted playsinline preload="none"></video></div>
+            <div class="vfoot"><button data-action="toggle">Pause</button><button data-action="restart">Restart</button><span>Actions each fighter received</span></div>
+          </div>
+        </div>
+        <div class="tab-panel" id="abl-b" role="tabpanel" aria-labelledby="tab-abl-b" hidden>
+          <div class="vcard" data-sync>
+            <div class="vgrid c2">
+              <figure class="vcell gt"><video src="static/video/sq_gt_0082.mp4" poster="static/video/sq_gt_0082.jpg" muted playsinline preload="none"></video><figcaption>Ground truth</figcaption></figure>
+              <figure class="vcell ours"><video src="static/video/sq_ours_0082.mp4" poster="static/video/sq_ours_0082.jpg" muted playsinline preload="none"></video><figcaption>Full LiveAct</figcaption></figure>
+              <figure class="vcell"><video src="static/video/sq_swapgate_0082.mp4" poster="static/video/sq_swapgate_0082.jpg" muted playsinline preload="none"></video><figcaption>w/o AASM</figcaption></figure>
+              <figure class="vcell"><video src="static/video/sq_woschema_0082.mp4" poster="static/video/sq_woschema_0082.jpg" muted playsinline preload="none"></video><figcaption>w/o SGAA</figcaption></figure>
+            </div>
+            <div class="strip"><video src="static/video/strip_0082.mp4" poster="static/video/strip_0082.jpg" muted playsinline preload="none"></video></div>
+            <div class="vfoot"><button data-action="toggle">Pause</button><button data-action="restart">Restart</button><span>Actions each fighter received</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <details class="table-details">
+      <summary>Inside SGAA · schema description, per-dimension tokens, and value modulation</summary>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Variant</th><th>Control token</th><th>Game Act-F1 ↑</th><th>Game Attr-Acc ↑</th><th>Robot NRMSE ↓</th><th>Robot Attr-Acc ↑</th></tr></thead>
+          <tbody>
+            <tr class="ours"><td>Full LiveAct</td><td>schema token, affine value modulation</td><td class="best">0.594</td><td class="best">0.898</td><td class="best">0.558</td><td class="best">0.942</td></tr>
+            <tr><td>w/o SGAA</td><td>one flat-MLP token per frame</td><td>0.225</td><td>0.603</td><td>1.120</td><td>0.484</td></tr>
+            <tr><td>w/o value modulation</td><td>schema token + additive value</td><td>0.209</td><td>0.513</td><td>1.071</td><td>0.480</td></tr>
+            <tr><td>w/o schema semantics</td><td>learned ID token, affine value modulation</td><td>0.230</td><td>0.588</td><td>0.799</td><td>0.778</td></tr>
+            <tr><td>Shuffled schema</td><td>mismatched descriptions at inference only</td><td>0.207</td><td>0.504</td><td>1.063</td><td>0.496</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+    <p class="note-sm">Every variant keeps Agent-Aware Spatial Modulation, per-agent cross-attention, and the one-latent action window. Removing any one factor drops control to the level of removing SGAA; learned IDs keep part of the gain only on robots, where one index means the same control across sources.</p>
+
+    <figure class="fig reveal" style="margin-top: 26px">
+      <div class="fig-card"><img src="static/img/residual_field.webp" alt="Spatial fields of agent-specific control residuals in Bomberman and Micro Machines; red for agent 1 and blue for agent 2." loading="lazy" width="1800" height="394"></div>
+      <figcaption><b>Where each stream acts.</b> Residual-magnitude heatmaps of the agent-specific branches (red: agent 1; blue: agent 2). The high-response regions concentrate around the corresponding visual agents, although the model never receives agent locations.</figcaption>
+    </figure>
+
+    <h3 class="sub reveal">Real-time distillation</h3>
+    <p class="sub-lead">Stage 3 reaches 17.70 FPS, 10.7× faster than Stage 2. On games, Act-F1 rises from 0.539 to 0.594 and Attr-Acc from 0.844 to 0.898 across the three stages, since each chunk is conditioned only on past context and the controls of its own frames. On robots, NRMSE rises from 0.430 to 0.558 and Attr-Acc falls from 0.969 to 0.942.</p>
+    <div class="vcard" style="padding: 0; overflow: hidden">
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th></th><th>Stage 1 · Foundational Ability Acquisition</th><th>Stage 2 · Teacher Forcing for AR Tuning</th><th>Stage 3 · DMD for Streaming Video</th></tr></thead>
+          <tbody>
+            <tr><td>Attention</td><td>Bidirectional</td><td>Blockwise causal</td><td>Blockwise causal</td></tr>
+            <tr><td>Training history</td><td>Full video</td><td>Clean chunks</td><td>Model rollouts</td></tr>
+            <tr><td>Denoising steps</td><td>50</td><td>50</td><td>4</td></tr>
+            <tr><td>Game Act-F1 ↑</td><td>0.539</td><td>0.565</td><td class="best">0.594</td></tr>
+            <tr><td>Game Attr-Acc ↑</td><td>0.844</td><td class="best">0.898</td><td class="best">0.898</td></tr>
+            <tr><td>Robot NRMSE ↓</td><td class="best">0.430</td><td>0.473</td><td>0.558</td></tr>
+            <tr><td>Robot Attr-Acc ↑</td><td>0.969</td><td class="best">0.970</td><td>0.942</td></tr>
+            <tr class="ours"><td>FPS ↑</td><td>2.77</td><td>1.66</td><td class="best">17.70</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub reveal">Beyond the training window</h3>
+    <p class="sub-lead">LiveAct trains on 81-frame windows. These 241-frame rollouts keep the stage, HUD, and agent identities over the full horizon, while small pose and position deviations build up in later frames. They are selected long-video cases, separate from the quantitative benchmark.</p>
+    <div class="long">
+      <div class="player light" data-sync>
+        <div class="player-head"><span class="dot"></span><span class="title">Micro Machines</span><span>· 241 frames</span><span class="hint">⇆ Drag to compare</span></div>
+        <div class="compare" style="aspect-ratio: 640 / 524">
+          <video class="cmp-base" src="static/video/long_gt_micromachines.mp4" poster="static/video/long_gt_micromachines.jpg" muted playsinline preload="none"></video>
+          <video class="cmp-top" src="static/video/long_gen_micromachines.mp4" poster="static/video/long_gen_micromachines.jpg" muted playsinline preload="none"></video>
+          <div class="cmp-handle"></div>
+          <span class="cmp-label left">Ground truth</span><span class="cmp-label right">LiveAct</span>
+          <input class="cmp-range" type="range" min="0" max="100" value="50" aria-label="Move the divider between ground truth and LiveAct">
+        </div>
+        <div class="player-foot">
+          <button class="icon-btn" data-action="toggle" aria-label="Pause"><svg viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3.5" height="12" rx="1"/><rect x="9.5" y="2" width="3.5" height="12" rx="1"/></svg></button>
+          <button class="icon-btn" data-action="restart" aria-label="Restart"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 8a5.5 5.5 0 105.5-5.5H5M5 2.5L3 4.5 5 6.5"/></svg></button>
+          <div class="progress"><i></i></div>
+        </div>
+      </div>
+      <div class="player light" data-sync>
+        <div class="player-head"><span class="dot"></span><span class="title">Mega Bomberman</span><span>· 241 frames</span><span class="hint">⇆ Drag to compare</span></div>
+        <div class="compare" style="aspect-ratio: 640 / 538">
+          <video class="cmp-base" src="static/video/long_gt_bomberman.mp4" poster="static/video/long_gt_bomberman.jpg" muted playsinline preload="none"></video>
+          <video class="cmp-top" src="static/video/long_gen_bomberman.mp4" poster="static/video/long_gen_bomberman.jpg" muted playsinline preload="none"></video>
+          <div class="cmp-handle"></div>
+          <span class="cmp-label left">Ground truth</span><span class="cmp-label right">LiveAct</span>
+          <input class="cmp-range" type="range" min="0" max="100" value="50" aria-label="Move the divider between ground truth and LiveAct">
+        </div>
+        <div class="player-foot">
+          <button class="icon-btn" data-action="toggle" aria-label="Pause"><svg viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3.5" height="12" rx="1"/><rect x="9.5" y="2" width="3.5" height="12" rx="1"/></svg></button>
+          <button class="icon-btn" data-action="restart" aria-label="Restart"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 8a5.5 5.5 0 105.5-5.5H5M5 2.5L3 4.5 5 6.5"/></svg></button>
+          <div class="progress"><i></i></div>
+        </div>
+      </div>
+      <div class="player light" data-sync>
+        <div class="player-head"><span class="dot"></span><span class="title">Fatal Fury 2</span><span>· 241 frames</span><span class="hint">⇆ Drag to compare</span></div>
+        <div class="compare" style="aspect-ratio: 640 / 524">
+          <video class="cmp-base" src="static/video/long_gt_fatalfury.mp4" poster="static/video/long_gt_fatalfury.jpg" muted playsinline preload="none"></video>
+          <video class="cmp-top" src="static/video/long_gen_fatalfury.mp4" poster="static/video/long_gen_fatalfury.jpg" muted playsinline preload="none"></video>
+          <div class="cmp-handle"></div>
+          <span class="cmp-label left">Ground truth</span><span class="cmp-label right">LiveAct</span>
+          <input class="cmp-range" type="range" min="0" max="100" value="50" aria-label="Move the divider between ground truth and LiveAct">
+        </div>
+        <div class="player-foot">
+          <button class="icon-btn" data-action="toggle" aria-label="Pause"><svg viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3.5" height="12" rx="1"/><rect x="9.5" y="2" width="3.5" height="12" rx="1"/></svg></button>
+          <button class="icon-btn" data-action="restart" aria-label="Restart"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 8a5.5 5.5 0 105.5-5.5H5M5 2.5L3 4.5 5 6.5"/></svg></button>
+          <div class="progress"><i></i></div>
+        </div>
+      </div>
+      <div class="player light" data-sync>
+        <div class="player-head"><span class="dot"></span><span class="title">Street Fighter II</span><span>· 241 frames</span><span class="hint">⇆ Drag to compare</span></div>
+        <div class="compare" style="aspect-ratio: 640 / 524">
+          <video class="cmp-base" src="static/video/long_gt_sf.mp4" poster="static/video/long_gt_sf.jpg" muted playsinline preload="none"></video>
+          <video class="cmp-top" src="static/video/long_gen_sf.mp4" poster="static/video/long_gen_sf.jpg" muted playsinline preload="none"></video>
+          <div class="cmp-handle"></div>
+          <span class="cmp-label left">Ground truth</span><span class="cmp-label right">LiveAct</span>
+          <input class="cmp-range" type="range" min="0" max="100" value="50" aria-label="Move the divider between ground truth and LiveAct">
+        </div>
+        <div class="player-foot">
+          <button class="icon-btn" data-action="toggle" aria-label="Pause"><svg viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3.5" height="12" rx="1"/><rect x="9.5" y="2" width="3.5" height="12" rx="1"/></svg></button>
+          <button class="icon-btn" data-action="restart" aria-label="Restart"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 8a5.5 5.5 0 105.5-5.5H5M5 2.5L3 4.5 5 6.5"/></svg></button>
+          <div class="progress"><i></i></div>
+        </div>
+      </div>
+    </div>
+    <figure class="fig reveal" style="margin-top: 18px">
+      <div class="fig-card"><img src="static/img/long_video_cases.webp?v=mm0015" alt="Twenty-four generated frames of one 241-frame Micro Machines rollout, sampled every ten frames." loading="lazy" width="2000" height="1094"></div>
+      <figcaption><b>A long rollout as a frame matrix.</b> 24 generated frames from the same 241-frame Micro Machines rollout shown above, sampled every ten frames and ordered left to right, top to bottom. All panels are LiveAct predictions; the conditioning frame is omitted.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ========================================================= DATASET -->
+<section id="dataset">
+  <div class="container">
+    <div class="sec-head reveal">
+      <div class="sec-kicker"><span class="num">05</span>Dataset</div>
+      <h2 class="display">Multi-agent, <i>one</i> model</h2>
+      <p class="sec-lead">Four competitive multiplayer games and two collaborative multi-arm robot sources. Each sample pairs an initial frame and a scene description with synchronized per-agent action streams, agent descriptions, and a task-specific control schema.</p>
+    </div>
+
+    <div class="sources">
+      <div class="src reveal"><video src="static/video/sq_ours_0075.mp4" poster="static/video/sq_ours_0075.jpg" muted loop playsinline preload="none"></video><div class="src-body"><h4><span class="sw game" style="width:8px;height:8px;border-radius:50%;display:inline-block"></span>Street Fighter II</h4><div class="row"><span><b>5,460</b> trajectories</span><span><b>45.50</b> h</span><span>binary</span></div></div></div>
+      <div class="src reveal"><video src="static/video/sq_ours_0001.mp4" poster="static/video/sq_ours_0001.jpg" muted loop playsinline preload="none"></video><div class="src-body"><h4><span class="sw game" style="width:8px;height:8px;border-radius:50%;display:inline-block"></span>Fatal Fury 2</h4><div class="row"><span><b>3,200</b> trajectories</span><span><b>26.67</b> h</span><span>binary</span></div></div></div>
+      <div class="src reveal"><video src="static/video/sq_ours_0009.mp4" poster="static/video/sq_ours_0009.jpg" muted loop playsinline preload="none"></video><div class="src-body"><h4><span class="sw game" style="width:8px;height:8px;border-radius:50%;display:inline-block"></span>Mega Bomberman</h4><div class="row"><span><b>2,050</b> trajectories</span><span><b>17.08</b> h</span><span>binary</span></div></div></div>
+      <div class="src reveal"><video src="static/video/sq_ours_0002.mp4" poster="static/video/sq_ours_0002.jpg" muted loop playsinline preload="none"></video><div class="src-body"><h4><span class="sw game" style="width:8px;height:8px;border-radius:50%;display:inline-block"></span>Micro Machines</h4><div class="row"><span><b>2,150</b> trajectories</span><span><b>17.92</b> h</span><span>binary</span></div></div></div>
+      <div class="src reveal"><video src="static/video/sq_ours_0008.mp4" poster="static/video/sq_ours_0008.jpg" muted loop playsinline preload="none"></video><div class="src-body"><h4><span class="sw robot" style="width:8px;height:8px;border-radius:50%;display:inline-block"></span>RoboTwin</h4><div class="row"><span><b>2,532</b> trajectories</span><span><b>3.93</b> h</span><span>continuous</span></div></div></div>
+      <div class="src reveal"><video src="static/video/sq_ours_0057.mp4" poster="static/video/sq_ours_0057.jpg" muted loop playsinline preload="none"></video><div class="src-body"><h4><span class="sw robot" style="width:8px;height:8px;border-radius:50%;display:inline-block"></span>RoboFactory</h4><div class="row"><span><b>2,559</b> trajectories</span><span><b>8.44</b> h</span><span>continuous</span></div></div></div>
+    </div>
+    <div class="totals reveal">
+      <div><div class="v">17,951</div><div class="k">multi-agent trajectories</div></div>
+      <div><div class="v">119.54 h</div><div class="k">raw video, 24.71 M frames</div></div>
+      <div><div class="v">108</div><div class="k">held-out benchmark clips</div></div>
+      <div><div class="v">2–4</div><div class="k">agents per scene</div></div>
+    </div>
+    <p class="note-sm">Durations refer to raw recordings at native frame rates (games 60 fps; RoboTwin 30 fps self-collected and 50 fps augmented; RoboFactory 30 fps). Training and evaluation use 81-frame clips drawn from these trajectories.</p>
+
+    <figure class="fig reveal" style="margin-top: 30px">
+      <div class="fig-card"><img src="static/img/data_pipeline.webp" alt="Data curation pipeline from game and robot episodes to aligned multi-agent samples." loading="lazy" width="2000" height="860"></div>
+      <figcaption><b>Data curation pipeline.</b> Game and robotic episodes are curated into aligned samples containing a scene prompt, per-agent action streams, agent descriptions, and task-specific schemas.</figcaption>
+    </figure>
+    <figure class="fig reveal" style="margin-top: 26px">
+      <div class="fig-card"><img src="static/img/datasets.webp" alt="Frames from the six data sources." loading="lazy" width="2000" height="1207"></div>
+      <figcaption><b>Dataset showcase.</b> Frames from the six sources, covering versus fighting, shared-map competition, shared-track racing, and multi-arm manipulation.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ===================================================== LIMITATIONS -->
+<section id="limitations">
+  <div class="container">
+    <div class="sec-head reveal">
+      <div class="sec-kicker"><span class="num">06</span>Limitations</div>
+      <h2 class="display">What is <i>not</i> solved yet</h2>
+    </div>
+    <ul class="limits">
+      <li class="reveal"><b>Two-agent benchmark</b>All quantitative results use two-agent clips; scenes with more agents are shown qualitatively.</li>
+      <li class="reveal"><b>Simulated robots</b>Robot data come from the RoboTwin and RoboFactory simulators; physical robots are not evaluated.</li>
+      <li class="reveal"><b>Fixed control width</b>Each agent has 12 control slots; richer action spaces need a wider schema.</li>
+      <li class="reveal"><b>Long horizons</b>Past the 81-frame training window, small pose and position errors accumulate.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ======================================================== CITATION -->
+<section id="citation">
+  <div class="container">
+    <div class="sec-head reveal">
+      <div class="sec-kicker"><span class="num">07</span>Citation</div>
+      <h2 class="display">Cite <i>LiveAct</i></h2>
+    </div>
+    <div class="bib">
+      <button class="copy-btn" type="button">Copy</button>
+<pre></pre>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="container">
+    <a class="brand" href="#top"><img src="static/img/logo.png" alt="" width="26" height="26">LiveAct</a>
+    <span>LiveAct · project page</span>
+  </div>
+</footer>
+
+<script src="static/js/main.js"></script>
+</body>
+</html>
